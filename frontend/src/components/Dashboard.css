@@ -1,0 +1,29 @@
+/* BEFORE: fixed widths causing overflow */
+
+/* AFTER: flexible grid and media queries */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+}
+
+.widget {
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+}
+
+/* ensure images/iframes scale */
+.widget img, .widget iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* mobile tweaks */
+@media (max-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
