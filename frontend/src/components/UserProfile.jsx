@@ -1,18 +1,31 @@
-// BEFORE: accessing user.metadata directly
-// const lastLogin = user.metadata.lastLogin.toLocaleString();
-
-function UserProfile({ user }) {
+function UserProfile({ user, currentUserId }) {
+  // Ensure user can only view their own sensitive metadata
+  const isOwnProfile = user?.id === currentUserId;
+  
   // Add defensive checks and defaults
   const metadata = user?.metadata ?? {};
-  const lastLogin = metadata.lastLogin ? new Date(metadata.lastLogin).toLocaleString() : 'N/A';
-  const preferences = metadata.preferences ?? {};
-
+  
+  // Only show sensitive information to the profile owner
+  const lastLogin = isOwnProfile && metadata.lastLogin 
+    ? new Date(metadata.lastLogin).toLocaleString() 
+    : 'Private';
+    
+  const preferences = isOwnProfile ? (metadata.preferences ?? {}) : {};
+  
+  // Sanitize and validate user input
+  const sanitizedName = user?.name ? String(user.name).substring(0, 100) : 'Unknown User';
+  
   return (
     <div className="user-profile">
-      <h2>{user?.name ?? 'Unknown User'}</h2>
-      <p>Last login: {lastLogin}</p>
-      {/* render preferences safely */}
-      <p>Preferred theme: {preferences.theme ?? 'default'}</p>
+      <h2>{sanitizedName}</h2>
+      {isOwnProfile ? (
+        <>
+          <p>Last login: {lastLogin}</p>
+          <p>Preferred theme: {preferences.theme ?? 'default'}</p>
+        </>
+      ) : (
+        <p>Profile information is private</p>
+      )}
     </div>
   );
 }
