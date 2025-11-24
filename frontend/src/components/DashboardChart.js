@@ -43,6 +43,19 @@ export default function DashboardChart() {
       fill: false,
     }],
   };
+  async function fetchReports(filters = {}, page = 1, limit = 50) {
+  const params = new URLSearchParams({ ...filters, page, limit }).toString();
+  const res = await fetch(`/api/reports/search?${params}`);
+  const data = await res.json();
+  return data;
+}
+
+// Example usage
+fetchReports({ searchTerm: "sales", category: "sales", startDate: "2025-01-01", endDate: "2025-12-31" })
+  .then(data => {
+    console.log("Filtered Reports:", data.data);
+    console.log("Total Records:", data.total);
+  });
 
   return (
     <div>
