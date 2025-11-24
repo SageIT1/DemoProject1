@@ -7,7 +7,10 @@ const reportController = require('../controllers/reportController');
 router.get('/', reportController.getReports);
 router.get('/:id', reportController.getReportById);
 
-module.exports = router;
+const { getReportsController } = require('../controllers/reportsController');
+
+router.get('/reports', getReportsController);
+
 // --- Example in-memory dataset (replace with DB in production) ---
 const reports = [];
 for (let i = 1; i <= 50000; i++) { // simulate many rows for large export
