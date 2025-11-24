@@ -29,6 +29,53 @@ exports.getReportById = async (req, res) => {
   }
 };
 
+// reports/controllers/reportsController.js
+const Report = require('../models/reportModel');
+
+async function searchReports(req, res) {
+  try {
+    const {
+      searchTerm = "",
+      category = "",
+      startDate,
+      endDate,
+      page = 1,
+      limit = 50
+    } = req.query;
+
+    // Build query
+    const query = {};
+    if (searchTerm) query.title = { $regex: searchTerm, $options: "i" }; // case-insensitive search
+    if (category && category !== "all") query.category = category;
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+    }
+
+    // Pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Execute query (DB handles filtering + sorting)
+    const reports = await Report.find(query)
+      .sort({ date: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Report.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: reports,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+}
 exports.getReports = async (req, res) => {
   try {
     // Simulate DB call
@@ -82,4 +129,5 @@ async function getReportsController(req, res) {
 
 module.exports = {
   getReportsController
+  searchReports
 };
