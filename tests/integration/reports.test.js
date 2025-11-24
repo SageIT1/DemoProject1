@@ -1,20 +1,19 @@
+// backend/tests/integration/reports.test.js
 const request = require('supertest');
-const express = require('express');
-const reportRoutes = require('../../routes/reports');
+const app = require('../../app'); // your Express app
 
-const app = express();
-app.use(express.json());
-app.use('/reports', reportRoutes);
-
-describe('Integration Test - Reports API', () => {
-  it('should return all reports successfully', async () => {
-    const res = await request(app).get('/reports');
+describe('Reports API Integration', () => {
+  test('GET /api/reports returns 200 and array of reports', async () => {
+    const res = await request(app).get('/api/reports');
     expect(res.statusCode).toBe(200);
-    expect(res.body.success || Array.isArray(res.body)).toBeTruthy();
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
-  it('should return 404 for non-existent report ID', async () => {
-    const res = await request(app).get('/reports/999');
-    expect([404, 200]).toContain(res.statusCode); // 404 preferred
+  test('GET /api/reports with category filter', async () => {
+    const res = await request(app).get('/api/reports?category=sales');
+    expect(res.statusCode).toBe(200);
+    res.body.data.forEach(report => {
+      expect(report.category).toBe('sales');
+    });
   });
 });
