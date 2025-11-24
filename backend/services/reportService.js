@@ -5,7 +5,22 @@ const reports = [
   { id: 3, title: 'Finance Report Q2', status: 'open', category: 'finance', date: '2025-11-05' },
   { id: 4, title: 'Ops Report November', status: 'open', category: 'ops', date: '2025-11-10' },
 ];
+async function getReports({ category, startDate, endDate }) {
+  const query = {};
 
+  if (category && category !== "all") query.category = category;
+  if (startDate || endDate) {
+    query.date = {};
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+  }
+
+  return Report.find(query).sort({ date: -1 });
+}
+
+module.exports = {
+  getReports
+};
 // Filter and fetch reports
 exports.getReports = async ({ from, to, status, category }) => {
   let filtered = [...reports];
