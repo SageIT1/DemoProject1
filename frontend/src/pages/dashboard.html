@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Responsive Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="dashboard-container">
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="date" id="startDate">
+      <input type="date" id="endDate">
+      <select id="categoryFilter">
+        <option value="all">All</option>
+        <option value="sales">Sales</option>
+        <option value="marketing">Marketing</option>
+        <option value="development">Development</option>
+      </select>
+      <button id="applyFiltersBtn">Apply Filters</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi">Total Sales: <span id="totalSales">0</span></div>
+    <div class="kpi">Total Users: <span id="totalUsers">0</span></div>
+    <div class="kpi">Avg. Revenue: <span id="avgRevenue">0</span></div>
+
+    <!-- Chart -->
+    <div class="chart-container">
+      <canvas id="reportChart"></canvas>
+    </div>
+
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
