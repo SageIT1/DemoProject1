@@ -1,68 +1,128 @@
-import DashboardChart from "../components/DashboardChart";
+import { useState, useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
 
 export default function DashboardPage() {
+  const [reportData, setReportData] = useState([]);
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    category: "all",
+  });
+  const chartRef = useRef(null);
+  const chartInstanceRef = useRef(null);
+
+  // --- Load filters from localStorage on mount
+  useEffect(() => {
+    const savedFilters = JSON.parse(localStorage.getItem("dashboardFilters")) || {};
+    setFilters(prev => ({ ...prev, ...savedFilters }));
+  }, []);
+
+  // --- Fetch reports from backend
+  useEffect(() => {
+    async function fetchReports() {
+      try {
+        const res = await fetch("/api/reports");
+        const data = await res.json();
+        setReportData(data);
+      } catch (error) {
+        console.error("Failed to fetch reports:", error);
+      }
+    }
+    fetchReports();
+  }, []);
+
+  // --- Filter data
+  const filteredData = reportData.filter(item => {
+    const itemDate = new Date(item.date);
+    let dateMatch = true;
+    if (filters.startDate) dateMatch = itemDate >= new Date(filters.startDate);
+    if (filters.endDate) dateMatch = dateMatch && itemDate <= new Date(filters.endDate);
+    const categoryMatch = filters.category === "all" || item.category === filters.category;
+    return dateMatch && categoryMatch;
+  });
+
+  // --- Update chart whenever filteredData changes
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    if (!chartInstanceRef.current) {
+      // Initialize chart
+      chartInstanceRef.current = new Chart(chartRef.current, {
+        type: "line",
+        data: {
+          labels: filteredData.map(i => i.date),
+          datasets: [
+            {
+              label: "Report Values",
+              data: filteredData.map(i => i.value),
+              borderColor: "blue",
+              fill: false,
+            },
+          ],
+        },
+      });
+    } else {
+      // Update existing chart
+      chartInstanceRef.current.data.labels = filteredData.map(i => i.date);
+      chartInstanceRef.current.data.datasets[0].data = filteredData.map(i => i.value);
+      chartInstanceRef.current.update();
+    }
+  }, [filteredData]);
+
+  // --- Handle filter change
+  const handleFilterChange = e => {
+    const { name, value } = e.target;
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
+    localStorage.setItem("dashboardFilters", JSON.stringify(newFilters)); // persist filters
+  };
+
   return (
     <div>
       <h1>Dashboard</h1>
-      <DashboardChart />
+
+      {/* Filters */}
+      <div className="filters">
+        <input
+          type="date"
+          name="startDate"
+          value={filters.startDate}
+          onChange={handleFilterChange}
+        />
+        <input
+          type="date"
+          name="endDate"
+          value={filters.endDate}
+          onChange={handleFilterChange}
+        />
+        <select
+          name="category"
+          value={filters.category}
+          onChange={handleFilterChange}
+        >
+          <option value="all">All</option>
+          <option value="sales">Sales</option>
+          <option value="marketing">Marketing</option>
+          <option value="development">Development</option>
+        </select>
+      </div>
+
+      {/* KPIs */}
+      <div className="kpis">
+        <div>Total Sales: {filteredData.filter(i => i.category === "sales").length}</div>
+        <div>Total Users: {filteredData.length}</div>
+        <div>
+          Avg Revenue:{" "}
+          {filteredData.length
+            ? (filteredData.reduce((sum, i) => sum + i.value, 0) / filteredData.length).toFixed(2)
+            : 0}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="chart-container">
+        <canvas ref={chartRef}></canvas>
+      </div>
     </div>
   );
 }
-// dashboard.js
-let reportData = []; // no raw data hardcoded
-
-async function fetchReports() {
-  try {
-    const res = await fetch('/api/reports');
-    reportData = await res.json();
-    updateDashboard(); // initial render
-  } catch (error) {
-    console.error("Failed to fetch reports:", error);
-  }
-}
-
-// Filter function
-function filterData() {
-  const startDate = document.getElementById("startDate").value;
-  const endDate = document.getElementById("endDate").value;
-  const category = document.getElementById("categoryFilter").value;
-
-  return reportData.filter(item => {
-    const itemDate = new Date(item.date);
-    let dateMatch = true;
-    if (startDate) dateMatch = itemDate >= new Date(startDate);
-    if (endDate) dateMatch = dateMatch && itemDate <= new Date(endDate);
-    let categoryMatch = category === "all" || item.category === category;
-    return dateMatch && categoryMatch;
-  });
-}
-
-// Update chart + KPIs
-function updateDashboard() {
-  const filtered = filterData();
-
-  // Chart update
-  chart.data.labels = filtered.map(i => i.date);
-  chart.data.datasets[0].data = filtered.map(i => i.value);
-  chart.update();
-
-  // Update KPIs
-  document.getElementById("totalSales").innerText = filtered.filter(i => i.category === "sales").length;
-  document.getElementById("totalUsers").innerText = filtered.length;
-  document.getElementById("avgRevenue").innerText =
-    filtered.length ? (filtered.reduce((sum, i) => sum + i.value, 0) / filtered.length).toFixed(2) : 0;
-}
-
-// Initialize chart
-let chartCtx = document.getElementById("reportChart").getContext("2d");
-let chart = new Chart(chartCtx, {
-  type: "line",
-  data: { labels: [], datasets: [{ label: "Report Values", data: [], borderColor: "blue", fill: false }] }
-});
-
-// Event listener
-document.getElementById("applyFiltersBtn").addEventListener("click", updateDashboard);
-
-// Fetch reports when page loads
-fetchReports();
-
