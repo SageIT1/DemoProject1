@@ -21,7 +21,22 @@ for (let i = 1; i <= 50000; i++) { // simulate many rows for large export
     rows: Math.floor(Math.random() * 1000)
   });
 }
+router.get('/api/reports', async (req, res) => {
+  // In real case, replace with DB query
+  const reports = await getReportsFromDatabase(); 
+  res.json(reports);
+});
 
+async function getReportsFromDatabase() {
+  // Example: simulate DB query
+  return [
+    { date: "2025-01-02", category: "sales", value: 45 },
+    { date: "2025-02-11", category: "marketing", value: 30 },
+    { date: "2025-03-15", category: "development", value: 50 },
+    { date: "2025-04-08", category: "sales", value: 40 },
+    { date: "2025-05-21", category: "marketing", value: 60 },
+  ];
+}
 // Utility: simple CSV cell escape
 function csvEscape(cell) {
   if (cell === null || cell === undefined) return '';
